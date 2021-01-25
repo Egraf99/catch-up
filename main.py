@@ -14,7 +14,6 @@ def main():
     c = Canvas(root, width=WIDTH, height=HEIGHT)
     c.grid()
     c.focus_set()
-    # line = c.create_line(0, HEIGHT * 0.9, WIDTH, HEIGHT * 0.9, width=3, fill='#f60')
     c.bind('<Button-3>', made_figure)
     c.bind('<Button-1>', go_all)
     root.mainloop()
@@ -50,7 +49,6 @@ class Circle:
 
         if event:
             self.x_finish, self.y_finish = event.x, event.y
-            self.kx = self.ky = None
             self.kx, self.ky = self._find_coefficient()
 
         if c.coords(self.coord)[3] > HEIGHT or c.coords(self.coord)[1] < 0:
@@ -62,7 +60,7 @@ class Circle:
         self.y += self.ky
         c.move(self.coord, self.ky, self.kx)
 
-        root.after(20, self.move)
+        root.after(60, self.move)
 
 
 def made_figure(event):
