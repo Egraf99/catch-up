@@ -1,5 +1,5 @@
 from tkinter import *
-from random import uniform, choice
+from random import randint, uniform, choice
 from math import *
 
 # size window and circles
@@ -27,7 +27,6 @@ class App:
         line = c.create_line(0, HEIGHT / 10, WIDTH, HEIGHT / 10, dash=(4, 2))
 
         # processing mouse events
-        c.bind('<Button-3>', start_balls)
         c.bind('<Button-1>', make_ball)
 
         root.mainloop()
@@ -44,39 +43,47 @@ class Circle:
         self.movement = False
         self.speed = 0
         self.aff = uniform(0.5, 1)  # acceleration of free fall
-        self.elasticity = uniform(0.5, 5)
+        self.elasticity = randint(1, 4)
 
     def move(self):
         # check coord ball
         if c.coords(self.item)[3] > HEIGHT:
             c.coords(self.item, self.x - BALL_SIZE, HEIGHT - BALL_SIZE * 2, self.x + BALL_SIZE, HEIGHT)
-            self.speed = -self.speed + self.elasticity
+            self.speed = -self.speed + self.speed/self.elasticity
 
         # change speed ball and move ball
         if c.coords(self.item)[3] > HEIGHT - 5 and fabs(self.speed) < 2:
             c.coords(self.item, self.x - BALL_SIZE, HEIGHT - BALL_SIZE * 2, self.x + BALL_SIZE, HEIGHT)
             self.speed = 0
+            self.movement = False
+            root.after(5000, self.delete)
         else:
             self.speed += self.aff
 
         c.move(self.item, 0, self.speed)
 
-        root.after(30, self.move)
+        if self.movement:
+            root.after(30, self.move)
+
+    def delete(self):
+        c.delete(self.item)
 
 
 def make_ball(event):
-    # checking mouse coord and made ball
+    # checking mouse coord, made and move ball
     if event.y < c.coords(line)[3]:
         ball = Circle(event.x, event.y, 1)
+        ball.movement = True
+        ball.move()
         balls.append(ball)
 
 
-def start_balls(event):
-    # start all balls in the window
-    for b in balls:
-        if not b.movement:
-            b.movement = True
-            b.move()
+# def start_balls(event):
+#     # start all balls in the window
+#     for b in balls:
+#         if not b.movement:
+#             b.movement = True
+#             b.move()
 
 
 if __name__ == '__main__':
