@@ -1,12 +1,15 @@
 from tkinter import *
-from random import uniform
+from random import uniform, choice
 from math import *
 
 # size window and circles
 WIDTH = 800
 HEIGHT = 800
 BALL_SIZE = 10
+
+# list of create balls and available colours
 balls = []
+COLOURS = ('black', 'white', 'green', 'yellow', 'red', 'blue', 'purple')
 
 
 class App:
@@ -21,7 +24,7 @@ class App:
         c.focus_set()
 
         # the line below which the ball cannot be placed
-        line = c.create_line(0, HEIGHT/10, WIDTH, HEIGHT/10, dash=(4, 2))
+        line = c.create_line(0, HEIGHT / 10, WIDTH, HEIGHT / 10, dash=(4, 2))
 
         # processing mouse events
         c.bind('<Button-3>', start_balls)
@@ -37,28 +40,28 @@ class Circle:
         self.size = size
         self.item = c.create_oval(x - BALL_SIZE * self.size, y - BALL_SIZE * self.size,
                                   x + BALL_SIZE * self.size, y + BALL_SIZE * self.size,
-                                  fill='green')
+                                  fill=choice(COLOURS))
         self.movement = False
         self.speed = 0
-        self.aff = uniform(0.1, 0.3) # acceleration of free fall
+        self.aff = uniform(0.5, 1)  # acceleration of free fall
         self.elasticity = uniform(0.5, 5)
 
     def move(self):
         # check coord ball
         if c.coords(self.item)[3] > HEIGHT:
-            c.coords(self.item, self.x - BALL_SIZE, HEIGHT - BALL_SIZE*2, self.x + BALL_SIZE, HEIGHT)
+            c.coords(self.item, self.x - BALL_SIZE, HEIGHT - BALL_SIZE * 2, self.x + BALL_SIZE, HEIGHT)
             self.speed = -self.speed + self.elasticity
 
         # change speed ball and move ball
         if c.coords(self.item)[3] > HEIGHT - 5 and fabs(self.speed) < 2:
-            c.coords(self.item, self.x - BALL_SIZE, HEIGHT - BALL_SIZE*2, self.x + BALL_SIZE, HEIGHT)
+            c.coords(self.item, self.x - BALL_SIZE, HEIGHT - BALL_SIZE * 2, self.x + BALL_SIZE, HEIGHT)
             self.speed = 0
         else:
             self.speed += self.aff
 
         c.move(self.item, 0, self.speed)
 
-        root.after(10, self.move)
+        root.after(30, self.move)
 
 
 def make_ball(event):
@@ -69,6 +72,7 @@ def make_ball(event):
 
 
 def start_balls(event):
+    # start all balls in the window
     for b in balls:
         if not b.movement:
             b.movement = True
