@@ -102,6 +102,7 @@ class Dino:
         self.speed_y = 0
 
         self.movement = False
+        self.jumping = False
         self.move()
         self.collision()
 
@@ -111,6 +112,10 @@ class Dino:
         if event:
             key = event.keysym
 
+        if key == "Up" and not self.jumping:
+            self.jumping = True
+            self.speed_y = -SPEED_Y_DINO
+            self.jump()
         if key == "Left":
             self.speed_x = -SPEED_X_DINO
         elif key == "Right":
@@ -120,6 +125,19 @@ class Dino:
         # speed = 0
         if event.keysym in ['Left', 'Right']:
             self.speed_x = 0
+
+    def jump(self):
+        if self.jumping:
+            self.speed_y += SPEED_Y_DINO/10
+
+        if c.coords(self.item)[3] > HEIGHT_WINDOW:
+            x1, x2 = c.coords(self.item)[0], c.coords(self.item)[2]
+            c.coords(self.item, x1, HEIGHT_WINDOW - HEIGHT_DINO, x2, HEIGHT_WINDOW)
+            self.jumping = False
+            self.speed_y = 0
+
+        if self.jumping:
+            root.after(ROOT, self.jump)
 
     def move(self):
         # move dino
