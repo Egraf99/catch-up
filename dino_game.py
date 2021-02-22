@@ -11,7 +11,7 @@ BALL_SIZE = 10
 WIDTH_DINO = 20
 HEIGHT_DINO = 80
 SPEED_X_DINO = 10
-SPEED_Y_DINO = 5
+SPEED_Y_DINO = 20
 
 # root after, ms
 ROOT = 30
@@ -131,8 +131,8 @@ class Dino:
             self.speed_y += SPEED_Y_DINO/10
 
         if c.coords(self.item)[3] > HEIGHT_WINDOW:
-            x1, x2 = c.coords(self.item)[0], c.coords(self.item)[2]
-            c.coords(self.item, x1, HEIGHT_WINDOW - HEIGHT_DINO, x2, HEIGHT_WINDOW)
+            x_left, x_right = c.coords(self.item)[0], c.coords(self.item)[2]
+            c.coords(self.item, x_left, HEIGHT_WINDOW - HEIGHT_DINO, x_right, HEIGHT_WINDOW)
             self.jumping = False
             self.speed_y = 0
 
@@ -141,10 +141,12 @@ class Dino:
 
     def move(self):
         # move dino
+        y_up, y_down = c.coords(self.item)[1], c.coords(self.item)[3]
+
         if c.coords(self.item)[0] < 0:
-            c.coords(self.item, 0, HEIGHT_WINDOW - HEIGHT_DINO, WIDTH_DINO, HEIGHT_WINDOW)
+            c.coords(self.item, 0, y_up, WIDTH_DINO, y_down)
         if c.coords(self.item)[2] > WIDTH_WINDOW:
-            c.coords(self.item, WIDTH_WINDOW - WIDTH_DINO, HEIGHT_WINDOW - HEIGHT_DINO, WIDTH_WINDOW, HEIGHT_WINDOW)
+            c.coords(self.item, WIDTH_WINDOW - WIDTH_DINO, y_up, WIDTH_WINDOW, y_down)
 
         c.move(self.item, self.speed_x, self.speed_y)
 
