@@ -18,7 +18,9 @@ ROOT = 30
 
 # list of create balls and available colours
 balls = []
-COLOURS = ('black', 'white', 'green', 'yellow', 'red', 'blue', 'purple')
+balls_quantity = []
+max_ball = 10
+COLOURS = ('black', 'white', 'green', 'yellow', 'red', 'blue', 'purple', 'orange')
 
 
 class App:
@@ -47,6 +49,8 @@ class App:
 
 
 class Circle:
+    id_ball = 0
+
     def __init__(self, x, y, size):
         self.x = x
         self.y = y
@@ -60,6 +64,10 @@ class Circle:
         self.speed = 0
         self.aff = uniform(0.5, 1)  # acceleration of free fall
         self.elasticity = uniform(1, 4)
+
+        self.id = self.id_ball
+        balls_quantity.append(self.id)
+        Circle.id_ball += 1
 
     def move(self):
         # check coord ball
@@ -83,6 +91,7 @@ class Circle:
 
     def delete(self):
         c.delete(self.item)
+        balls_quantity.remove(self.id)
 
 
 class Dino:
@@ -128,9 +137,9 @@ class Dino:
         for ball in balls:
             if ball.movement:
                 if \
-                        c.coords(ball.item)[0] < c.coords(self.item)[0] < c.coords(ball.item)[2] or \
-                        c.coords(ball.item)[2] < c.coords(self.item)[0] < c.coords(ball.item)[2] and \
-                        c.coords(ball.item)[3] > c.coords(self.item)[1]:
+                        (c.coords(ball.item)[0] <= c.coords(self.item)[0] <= c.coords(ball.item)[2] or
+                         c.coords(ball.item)[0] <= c.coords(self.item)[2] <= c.coords(ball.item)[2]) and \
+                        c.coords(ball.item)[3] >= c.coords(self.item)[1]:
                     c.create_text(WIDTH_WINDOW / 2, HEIGHT_WINDOW / 2, anchor=CENTER,
                                   font='Times 30', text='Игра окончена!')
 
@@ -139,7 +148,7 @@ class Dino:
 
 def make_ball(event):
     # checking mouse coord, made and move ball
-    if event.y < c.coords(line)[3]:
+    if event.y < c.coords(line)[3] and len(balls_quantity) <= max_ball:
         ball = Circle(event.x, event.y, 1)
         ball.movement = True
         ball.move()
