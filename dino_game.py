@@ -40,7 +40,8 @@ class App:
 
         # processing events
         c.bind('<Button-1>', make_ball)
-        c.bind('<KeyPress>', dino.move)
+        c.bind('<KeyPress>', dino.start_move)
+        c.bind('<KeyRelease>', dino.stop_move)
 
         root.mainloop()
 
@@ -58,14 +59,13 @@ class Circle:
         self.movement = False
         self.speed = 0
         self.aff = uniform(0.5, 1)  # acceleration of free fall
-        self.elasticity = randint(1, 4)
+        self.elasticity = uniform(1, 4)
 
     def move(self):
-        """ check coords ball and move him"""
         # check coord ball
         if c.coords(self.item)[3] > HEIGHT_WINDOW:
             c.coords(self.item, self.x - BALL_SIZE, HEIGHT_WINDOW - BALL_SIZE * 2, self.x + BALL_SIZE, HEIGHT_WINDOW)
-            self.speed = -self.speed + self.speed/self.elasticity
+            self.speed = -self.speed + self.speed / self.elasticity
 
         # change speed ball and move ball
         if c.coords(self.item)[3] > HEIGHT_WINDOW - 5 and fabs(self.speed) < 2:
@@ -85,41 +85,65 @@ class Circle:
         c.delete(self.item)
 
 
+class Dino:
+    def __init__(self):
+        self.item = c.create_rectangle(WIDTH_WINDOW / 2 - WIDTH_DINO / 2, HEIGHT_WINDOW - HEIGHT_DINO,
+                                       WIDTH_WINDOW / 2 + WIDTH_DINO / 2, HEIGHT_WINDOW,
+                                       fill="gray")
+        self.speed_x = 0
+        self.speed_y = 0
+
+        self.movement = False
+        self.move()
+        self.collision()
+
+    def start_move(self, event):
+        # sets the speed
+        key = None
+        if event:
+            key = event.keysym
+
+        if key == "Left":
+            self.speed_x = -SPEED_X_DINO
+        elif key == "Right":
+            self.speed_x = SPEED_X_DINO
+
+    def stop_move(self, event):
+        # speed = 0
+        if event.keysym in ['Left', 'Right']:
+            self.speed_x = 0
+
+    def move(self):
+        # move dino
+        if c.coords(self.item)[0] < 0:
+            c.coords(self.item, 0, HEIGHT_WINDOW - HEIGHT_DINO, WIDTH_DINO, HEIGHT_WINDOW)
+        if c.coords(self.item)[2] > WIDTH_WINDOW:
+            c.coords(self.item, WIDTH_WINDOW - WIDTH_DINO, HEIGHT_WINDOW - HEIGHT_DINO, WIDTH_WINDOW, HEIGHT_WINDOW)
+
+        c.move(self.item, self.speed_x, self.speed_y)
+
+        root.after(ROOT, self.move)
+
+    def collision(self):
+        for ball in balls:
+            if ball.movement:
+                if \
+                        c.coords(ball.item)[0] < c.coords(self.item)[0] < c.coords(ball.item)[2] or \
+                        c.coords(ball.item)[2] < c.coords(self.item)[0] < c.coords(ball.item)[2] and \
+                        c.coords(ball.item)[3] > c.coords(self.item)[1]:
+                    c.create_text(WIDTH_WINDOW / 2, HEIGHT_WINDOW / 2, anchor=CENTER,
+                                  font='Times 30', text='Игра окончена!')
+
+        root.after(1, self.collision)
+
+
 def make_ball(event):
-    """checking mouse coord, made and move ball"""
+    # checking mouse coord, made and move ball
     if event.y < c.coords(line)[3]:
         ball = Circle(event.x, event.y, 1)
         ball.movement = True
         ball.move()
         balls.append(ball)
-
-
-class Dino:
-    def __init__(self):
-        self.item = c.create_rectangle(WIDTH_WINDOW/2 - WIDTH_DINO/2, HEIGHT_WINDOW - HEIGHT_DINO,
-                                       WIDTH_WINDOW/2 + WIDTH_DINO/2, HEIGHT_WINDOW,
-                                       fill="gray")
-        self.speed_x = 0
-        self.speed_y = 0
-
-    def move(self, event=None):
-        """ move dino"""
-        if event:
-            key = event.keysym
-        else:
-            key = None
-
-        if key == "Left" and c.coords(self.item)[0] > 0:
-            self.speed_x = -SPEED_X_DINO
-        elif key == "Right" and c.coords(self.item)[2] < WIDTH_WINDOW:
-            self.speed_x = SPEED_X_DINO
-
-        if not key:
-            self.speed_x = 0
-
-        c.move(self.item, self.speed_x, self.speed_y)
-
-        root.after(ROOT, self.move)
 
 
 if __name__ == '__main__':
