@@ -16,11 +16,10 @@ SPEED_Y_DINO = 5
 # root after, ms
 ROOT = 30
 
-# list of create balls and available colours
+# list of create balls
 balls = []
 balls_quantity = []
 max_ball = 10
-COLOURS = ('black', 'white', 'green', 'yellow', 'red', 'blue', 'purple', 'orange')
 
 
 class App:
@@ -58,7 +57,7 @@ class Circle:
 
         self.item = c.create_oval(x - BALL_SIZE * self.size, y - BALL_SIZE * self.size,
                                   x + BALL_SIZE * self.size, y + BALL_SIZE * self.size,
-                                  fill=choice(COLOURS))
+                                  fill=random_color())
 
         self.movement = False
         self.speed = 0
@@ -98,7 +97,7 @@ class Dino:
     def __init__(self):
         self.item = c.create_rectangle(WIDTH_WINDOW / 2 - WIDTH_DINO / 2, HEIGHT_WINDOW - HEIGHT_DINO,
                                        WIDTH_WINDOW / 2 + WIDTH_DINO / 2, HEIGHT_WINDOW,
-                                       fill="gray")
+                                       fill=random_color())
         self.speed_x = 0
         self.speed_y = 0
 
@@ -153,6 +152,15 @@ def make_ball(event):
         ball.movement = True
         ball.move()
         balls.append(ball)
+
+
+def random_color():
+    # generate random HEX color. Example: #AA11FF
+    color = '#'
+    colors = ['1', '2', '3', '4', '5', '6', '7', '8', '9', 'A', 'B', 'C', 'D', 'E', 'F']
+    for i in range(6):
+        color += f'{choice(colors)}'
+    return color
 
 
 if __name__ == '__main__':
