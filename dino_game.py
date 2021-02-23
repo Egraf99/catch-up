@@ -19,7 +19,7 @@ ROOT = 30
 # list of create balls
 balls = []
 balls_quantity = []
-max_ball = 10
+max_ball = 3
 
 
 class App:
@@ -97,7 +97,7 @@ class Dino:
     def __init__(self):
         self.item = c.create_rectangle(WIDTH_WINDOW / 2 - WIDTH_DINO / 2, HEIGHT_WINDOW - HEIGHT_DINO,
                                        WIDTH_WINDOW / 2 + WIDTH_DINO / 2, HEIGHT_WINDOW,
-                                       fill=random_color())
+                                       fill="orange")
         self.speed_x = 0
         self.speed_y = 0
 
@@ -158,7 +158,8 @@ class Dino:
                 if \
                         (c.coords(ball.item)[0] <= c.coords(self.item)[0] <= c.coords(ball.item)[2] or
                          c.coords(ball.item)[0] <= c.coords(self.item)[2] <= c.coords(ball.item)[2]) and \
-                        c.coords(ball.item)[3] >= c.coords(self.item)[1]:
+                        (c.coords(ball.item)[1] <= c.coords(self.item)[1] <= c.coords(ball.item)[3] or
+                         c.coords(ball.item)[1] <= c.coords(self.item)[3] <= c.coords(ball.item)[3]):
                     c.create_text(WIDTH_WINDOW / 2, HEIGHT_WINDOW / 2, anchor=CENTER,
                                   font='Times 30', text='Игра окончена!')
 
@@ -167,7 +168,7 @@ class Dino:
 
 def make_ball(event):
     # checking mouse coord, made and move ball
-    if event.y < c.coords(line)[3] and len(balls_quantity) <= max_ball:
+    if event.y < c.coords(line)[3] and len(balls_quantity) < max_ball:
         ball = Circle(event.x, event.y, 1)
         ball.movement = True
         ball.move()
