@@ -178,9 +178,10 @@ def make_ball(event):
 def random_color():
     # generate random HEX color. Example: #AA11FF
     color = '#'
-    colors = ['1', '2', '3', '4', '5', '6', '7', '8', '9', 'A', 'B', 'C', 'D', 'E', 'F']
+    colors = ['0', '1', '2', '3', '4', '5', '6', '7', '8', '9', 'A', 'B', 'C', 'D', 'E', 'F']
     for i in range(6):
         color += f'{choice(colors)}'
+    print(color)
     return color
 
 
