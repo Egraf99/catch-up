@@ -24,13 +24,16 @@ max_ball = 3
 
 class App:
     def __init__(self):
-        global root, c, line
+        global root, c, line, WIDTH_WINDOW, HEIGHT_WINDOW
 
         # made window
         root = Tk()
         root.title('Дино-игра')
+        WIDTH_WINDOW = root.winfo_screenwidth()
+        HEIGHT_WINDOW = root.winfo_screenheight()
+        root.attributes('-fullscreen', True)
         c = Canvas(root, width=WIDTH_WINDOW, height=HEIGHT_WINDOW)
-        c.grid()
+        c.place(x=0, y=0)
         c.focus_set()
 
         # the line below which the ball cannot be placed
@@ -43,6 +46,7 @@ class App:
         c.bind('<Button-1>', make_ball)
         c.bind('<KeyPress>', dino.start_move)
         c.bind('<KeyRelease>', dino.stop_move)
+        root.bind('<Key>', close_window)
 
         root.mainloop()
 
@@ -181,8 +185,12 @@ def random_color():
     colors = ['0', '1', '2', '3', '4', '5', '6', '7', '8', '9', 'A', 'B', 'C', 'D', 'E', 'F']
     for i in range(6):
         color += f'{choice(colors)}'
-    print(color)
     return color
+
+
+def close_window(event):
+    if event.keysym == 'Escape':
+        root.destroy()
 
 
 if __name__ == '__main__':
