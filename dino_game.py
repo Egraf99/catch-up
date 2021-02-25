@@ -2,7 +2,6 @@ from tkinter import *
 from random import uniform, choice
 from math import *
 
-
 # root after, ms
 ROOT = 30
 
@@ -35,7 +34,9 @@ def set_size_window(*args, fullscreen=False):
 
 class App:
     def __init__(self):
-        global root, dino, c, line, WINDOW_WIDTH, WINDOW_HEIGHT
+        global root, dino, c, playing, line, WINDOW_WIDTH, WINDOW_HEIGHT
+
+        playing = True
 
         # the line below which the ball cannot be placed
         line = c.create_line(0, WINDOW_HEIGHT / 10, WINDOW_WIDTH, WINDOW_HEIGHT / 10, dash=(4, 2))
@@ -57,7 +58,7 @@ class Circle:
     id_ball = 0
     balls = []
     balls_quantity = []
-    max_ball = 30
+    max_ball = 20
 
     def __init__(self, x, y, size):
         self.x = x
@@ -69,7 +70,8 @@ class Circle:
                                   fill=random_color())
 
         self.movement = False
-        self.speed = 0
+        self.speed_x = 0
+        self.speed_y = 0
         self.aff = uniform(0.5, 1)  # acceleration of free fall
         self.elasticity = uniform(1, 4)
 
@@ -79,24 +81,29 @@ class Circle:
 
     def move(self):
         if playing:
-            # check coord ball
-            if c.coords(self.item)[3] > WINDOW_HEIGHT:
-                c.coords(self.item, self.x - BALL_SIZE, WINDOW_HEIGHT - BALL_SIZE * 2, self.x + BALL_SIZE, WINDOW_HEIGHT)
-                self.speed = -self.speed + self.speed / self.elasticity
+            try:
+                # check coord ball
+                if c.coords(self.item)[3] > WINDOW_HEIGHT:
+                    c.coords(self.item, self.x - BALL_SIZE, WINDOW_HEIGHT - BALL_SIZE * 2, self.x + BALL_SIZE,
+                             WINDOW_HEIGHT)
+                    self.speed_y = -self.speed_y + self.speed_y / self.elasticity
 
-            # change speed ball and move ball
-            if c.coords(self.item)[3] > WINDOW_HEIGHT - 5 and fabs(self.speed) < 2:
-                c.coords(self.item, self.x - BALL_SIZE, WINDOW_HEIGHT - BALL_SIZE * 2, self.x + BALL_SIZE, WINDOW_HEIGHT)
-                self.speed = 0
-                self.movement = False
-                root.after(5000, self.delete)
-            else:
-                self.speed += self.aff
+                # change speed ball and move ball
+                if c.coords(self.item)[3] > WINDOW_HEIGHT - 5 and fabs(self.speed_y) < 2:
+                    c.coords(self.item, self.x - BALL_SIZE, WINDOW_HEIGHT - BALL_SIZE * 2, self.x + BALL_SIZE,
+                             WINDOW_HEIGHT)
+                    self.speed_y = 0
+                    self.movement = False
+                    root.after(5000, self.delete)
+                else:
+                    self.speed_y += self.aff
 
-            c.move(self.item, 0, self.speed)
+                c.move(self.item, 0, self.speed_y)
 
-            if self.movement:
-                root.after(ROOT, self.move)
+                if self.movement:
+                    root.after(ROOT, self.move)
+            except TclError: pass
+            except IndexError: pass
 
     def delete(self):
         try:
@@ -104,6 +111,10 @@ class Circle:
             self.balls_quantity.remove(self.id)
         except ValueError:
             pass
+
+    def change_speed(self, x, y):
+        self.speed_x = x
+        self.speed_y = y
 
 
 class Dino:
@@ -142,10 +153,14 @@ class Dino:
             if event.keysym in ['Left', 'Right']:
                 self.speed_x = 0
 
+    def speed(self, x, y):
+        self.speed_x = x
+        self.speed_y = y
+
     def jump(self):
         if playing:
             if self.jumping:
-                self.speed_y += DIN0_SPEED_Y/10
+                self.speed_y += DIN0_SPEED_Y / 10
 
             if c.coords(self.item)[3] > WINDOW_HEIGHT:
                 x_left, x_right = c.coords(self.item)[0], c.coords(self.item)[2]
@@ -158,17 +173,20 @@ class Dino:
 
     def move(self):
         if playing:
-            # move dino
-            y_up, y_down = c.coords(self.item)[1], c.coords(self.item)[3]
+            try:
+                # move dino
+                y_up, y_down = c.coords(self.item)[1], c.coords(self.item)[3]
 
-            if c.coords(self.item)[0] < 0:
-                c.coords(self.item, 0, y_up, DIN0_WIDTH, y_down)
-            if c.coords(self.item)[2] > WINDOW_WIDTH:
-                c.coords(self.item, WINDOW_WIDTH - DIN0_WIDTH, y_up, WINDOW_WIDTH, y_down)
+                if c.coords(self.item)[0] < 0:
+                    c.coords(self.item, 0, y_up, DIN0_WIDTH, y_down)
+                if c.coords(self.item)[2] > WINDOW_WIDTH:
+                    c.coords(self.item, WINDOW_WIDTH - DIN0_WIDTH, y_up, WINDOW_WIDTH, y_down)
 
-            c.move(self.item, self.speed_x, self.speed_y)
+                c.move(self.item, self.speed_x, self.speed_y)
 
-            root.after(ROOT, self.move)
+                root.after(ROOT, self.move)
+            except TclError: pass
+            except IndexError: pass
 
     def collision(self):
         if playing:
@@ -178,11 +196,12 @@ class Dino:
                         if \
                                 (c.coords(ball.item)[0] <= c.coords(self.item)[0] <= c.coords(ball.item)[2] or
                                  c.coords(ball.item)[0] <= c.coords(self.item)[2] <= c.coords(ball.item)[2]) and \
-                                (c.coords(ball.item)[1] <= c.coords(self.item)[1] <= c.coords(ball.item)[3] or
-                                 c.coords(ball.item)[1] <= c.coords(self.item)[3] <= c.coords(ball.item)[3]):
-                            clear_root()
-                            c.create_text(WINDOW_WIDTH / 2, WINDOW_HEIGHT / 2, anchor=CENTER,
-                                          font='Times 30', text='Игра окончена!')
+                                        (c.coords(ball.item)[1] <= c.coords(self.item)[1] <= c.coords(ball.item)[3] or
+                                         c.coords(ball.item)[1] <= c.coords(self.item)[3] <= c.coords(ball.item)[3]):
+                            game_over()
+
+                    except TclError:
+                        pass
                     except IndexError:
                         pass
 
@@ -219,15 +238,15 @@ def handling_keyboard_events(event):
     if event.keysym == 'Escape':
         root.destroy()
     if event.keysym == 'space':
-        # RESET
+        retry()
         pass
 
 
 def init_game():
-    global c, playing
+    global c
 
     # set size objects
-    set_size_window(800, 800)
+    set_size_window(fullscreen=True)
 
     # made window
     root.title('Дино-игра')
@@ -235,22 +254,40 @@ def init_game():
     c.place(x=0, y=0)
     c.focus_set()
 
-    playing = True
 
+def game_over():
+    global playing
 
-def clear_root():
-    global dino, playing
     playing = False
-    dino = dino.delete()
+
+    # speed all objects = 0
+    dino.speed(0, 0)
     for ball in Circle.balls:
-        ball.delete()
-    Circle.balls = None
+        ball.change_speed(0, 0)
+
+    # text
+    size_text = WINDOW_WIDTH // 25
+    font_text = 'Times ' + str(size_text)
+
+    c.create_text(WINDOW_WIDTH / 2, WINDOW_HEIGHT / 2, anchor=CENTER,
+                  font=font_text, text='Игра окончена!')
+
+    # button of retry
+    Button(root, bg='gray', text='Новая игра', font=font_text, command=retry, anchor=CENTER)\
+        .place(x=WINDOW_WIDTH / 2, y=WINDOW_HEIGHT / 1.2)
 
 
-# def reset():
-#     global app
-#     init_game()
-#     app = App()
+def retry():
+    global app
+
+    # delete all objects
+    list_destroy = root.place_slaves()
+    for obj in list_destroy:
+        obj.destroy()
+
+    # start new game
+    init_game()
+    app = App()
 
 
 if __name__ == '__main__':
