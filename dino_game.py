@@ -58,7 +58,7 @@ class Circle:
     id_ball = 0
     balls = []
     balls_quantity = []
-    max_ball = 20
+    max_ball = 5
 
     def __init__(self, x, y, size):
         self.x = x
@@ -102,8 +102,10 @@ class Circle:
 
                 if self.movement:
                     root.after(ROOT, self.move)
-            except TclError: pass
-            except IndexError: pass
+            except TclError:
+                pass
+            except IndexError:
+                pass
 
     def delete(self):
         try:
@@ -185,8 +187,10 @@ class Dino:
                 c.move(self.item, self.speed_x, self.speed_y)
 
                 root.after(ROOT, self.move)
-            except TclError: pass
-            except IndexError: pass
+            except TclError:
+                pass
+            except IndexError:
+                pass
 
     def collision(self):
         if playing:
@@ -194,10 +198,10 @@ class Dino:
                 if ball.movement:
                     try:
                         if \
-                                (c.coords(ball.item)[0] <= c.coords(self.item)[0] <= c.coords(ball.item)[2] or
-                                 c.coords(ball.item)[0] <= c.coords(self.item)[2] <= c.coords(ball.item)[2]) and \
-                                        (c.coords(ball.item)[1] <= c.coords(self.item)[1] <= c.coords(ball.item)[3] or
-                                         c.coords(ball.item)[1] <= c.coords(self.item)[3] <= c.coords(ball.item)[3]):
+                                (c.coords(self.item)[0] <= c.coords(ball.item)[0] <= c.coords(self.item)[2] or
+                                 c.coords(self.item)[0] <= c.coords(ball.item)[2] <= c.coords(self.item)[2]) and \
+                                (c.coords(ball.item)[1] <= c.coords(self.item)[1] <= c.coords(ball.item)[3] or
+                                 c.coords(ball.item)[1] <= c.coords(self.item)[3] <= c.coords(ball.item)[3]):
                             game_over()
 
                     except TclError:
@@ -273,12 +277,17 @@ def game_over():
                   font=font_text, text='Игра окончена!')
 
     # button of retry
-    Button(root, bg='gray', text='Новая игра', font=font_text, command=retry, anchor=CENTER)\
-        .place(x=WINDOW_WIDTH / 2, y=WINDOW_HEIGHT / 1.2)
+    Button(root, bg='gray', text='Новая игра', font=font_text, command=retry) \
+        .place(x=WINDOW_WIDTH / 3, y=WINDOW_HEIGHT / 5, width=WINDOW_WIDTH / 3)
 
 
 def retry():
     global app
+
+    # clear lists
+    Circle.balls_quantity = []
+    Circle.balls = []
+    Circle.id_ball = 0
 
     # delete all objects
     list_destroy = root.place_slaves()
