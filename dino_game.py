@@ -6,8 +6,21 @@ from math import *
 ROOT = 30
 
 
+def init_game():
+    global c
+
+    # set size objects
+    set_size_window(800, 800)
+
+    # made window
+    root.title('Дино-игра')
+    c = Canvas(root, width=WINDOW_WIDTH, height=WINDOW_HEIGHT)
+    c.place(x=0, y=0)
+    c.focus_set()
+
+
 def set_size_window(*args, fullscreen=False):
-    global WINDOW_WIDTH, WINDOW_HEIGHT, DIN0_WIDTH, DIN0_HEIGHT, DIN0_SPEED_X, DIN0_SPEED_Y, BALL_SIZE
+    global full, WINDOW_WIDTH, WINDOW_HEIGHT, DIN0_WIDTH, DIN0_HEIGHT, DIN0_SPEED_X, DIN0_SPEED_Y, BALL_SIZE
 
     # set size window
     if len(args) == 2:
@@ -16,6 +29,7 @@ def set_size_window(*args, fullscreen=False):
         WINDOW_HEIGHT = win_h
         root.geometry(f'{win_w}x{win_h}')
     elif fullscreen:
+        full = True
         WINDOW_WIDTH = root.winfo_screenwidth()
         WINDOW_HEIGHT = root.winfo_screenheight()
         root.attributes('-fullscreen', True)
@@ -32,6 +46,48 @@ def set_size_window(*args, fullscreen=False):
     BALL_SIZE = WINDOW_WIDTH / 100
 
 
+def game_over():
+    global playing
+
+    playing = False
+
+    # speed all objects = 0
+    dino.speed(0, 0)
+    for ball in Circle.balls:
+        ball.change_speed(0, 0)
+
+    # text
+    size_text = WINDOW_WIDTH // 25
+    font_text = 'Times ' + str(size_text)
+
+    c.create_text(WINDOW_WIDTH / 2, WINDOW_HEIGHT / 2, anchor=CENTER,
+                  font=font_text, text='Игра окончена!')
+
+    # button of retry
+    Button(root, bg='gray', text='Новая игра', font=font_text, command=retry) \
+        .place(x=WINDOW_WIDTH / 3, y=WINDOW_HEIGHT / 5, width=WINDOW_WIDTH / 3)
+
+
+def retry():
+    global app
+
+    # clear lists
+    Circle.balls_quantity = []
+    Circle.balls = []
+    Circle.id_ball = 0
+
+    Figure.figures = []
+
+    # delete all objects
+    list_destroy = root.place_slaves()
+    for obj in list_destroy:
+        obj.destroy()
+
+    # start new game
+    init_game()
+    app = App()
+
+
 class App:
     def __init__(self):
         global root, dino, c, playing, line, WINDOW_WIDTH, WINDOW_HEIGHT
@@ -45,12 +101,82 @@ class App:
         dino = Dino()
 
         # processing events
-        c.bind('<Button-1>', make_ball)
+        c.bind('<ButtonPress-1>', make_ball)
+        c.bind('<ButtonPress-3>', start_make_figure)
+        c.bind('<B3-Motion>', show_figure)
+        c.bind('<ButtonRelease-3>', make_figure)
         c.bind('<KeyPress>', dino.start_move)
         c.bind('<KeyRelease>', dino.stop_move)
         root.bind('<Key>', handling_keyboard_events)
 
         root.mainloop()
+
+
+class Figure:
+    # list of figures
+    figures = []
+
+    def __init__(self, figure='square'):
+        self.item = None
+
+        self.figure = figure
+
+        self.speed_y = 0
+        self.aff = 1.5
+
+    def create(self, color=None):
+        if playing:
+            if color:
+                col = color
+            else:
+                col = random_color()
+
+            if self.figure == 'square':
+                self.item = c.create_rectangle(self.x_left, self.y_up, self.x_right, self.y_down, fill=col)
+
+    def move(self):
+        if playing:
+            self.speed_y += self.aff
+
+            c.move(self.item, 0, self.speed_y)
+
+            if c.coords(self.item)[3] < WINDOW_HEIGHT:
+                root.after(ROOT, self.move)
+            else:
+                self.speed_y = 0
+                c.coords(self.item,
+                         self.x_left, WINDOW_HEIGHT - (fabs(self.y_down - self.y_up)),
+                         self.x_right, WINDOW_HEIGHT)
+
+    def delete(self):
+        c.delete(self.item)
+
+
+def start_make_figure(event):
+    global fig, pressed
+    pressed = True
+    fig = Figure()
+    fig.x_left, fig.y_up = event.x, event.y
+
+
+def make_figure(event):
+    global fig, pressed
+
+    fig.delete()
+    fig.x_right, fig.y_down = event.x, event.y
+    fig.create(color=None)
+    Figure.figures.append(fig)
+    fig.move()
+    pressed = False
+
+
+def show_figure(event):
+    global fig
+
+    fig.delete()
+    if pressed:
+        fig.x_right, fig.y_down = event.x, event.y
+        fig.create(color='white')
 
 
 class Circle:
@@ -119,7 +245,18 @@ class Circle:
         self.speed_y = y
 
 
+def make_ball(event):
+    if playing:
+        # checking mouse coord, made and move ball
+        if event.y < c.coords(line)[3] and len(Circle.balls_quantity) < Circle.max_ball:
+            ball = Circle(event.x, event.y, 1)
+            ball.movement = True
+            ball.move()
+            Circle.balls.append(ball)
+
+
 class Dino:
+
     def __init__(self):
         self.item = c.create_rectangle(WINDOW_WIDTH / 2 - DIN0_WIDTH / 2, WINDOW_HEIGHT - DIN0_HEIGHT,
                                        WINDOW_WIDTH / 2 + DIN0_WIDTH / 2, WINDOW_HEIGHT,
@@ -200,8 +337,8 @@ class Dino:
                         if \
                                 (c.coords(self.item)[0] <= c.coords(ball.item)[0] <= c.coords(self.item)[2] or
                                  c.coords(self.item)[0] <= c.coords(ball.item)[2] <= c.coords(self.item)[2]) and \
-                                (c.coords(ball.item)[1] <= c.coords(self.item)[1] <= c.coords(ball.item)[3] or
-                                 c.coords(ball.item)[1] <= c.coords(self.item)[3] <= c.coords(ball.item)[3]):
+                                        (c.coords(ball.item)[1] <= c.coords(self.item)[1] <= c.coords(ball.item)[3] or
+                                         c.coords(ball.item)[1] <= c.coords(self.item)[3] <= c.coords(ball.item)[3]):
                             game_over()
 
                     except TclError:
@@ -218,16 +355,6 @@ class Dino:
             pass
 
 
-def make_ball(event):
-    if playing:
-        # checking mouse coord, made and move ball
-        if event.y < c.coords(line)[3] and len(Circle.balls_quantity) < Circle.max_ball:
-            ball = Circle(event.x, event.y, 1)
-            ball.movement = True
-            ball.move()
-            Circle.balls.append(ball)
-
-
 def random_color():
     # generate random HEX color. Example: #AA11FF
     color = '#'
@@ -238,65 +365,12 @@ def random_color():
 
 
 def handling_keyboard_events(event):
-    # print(f'{event.keysym} и {event.type}') - for learn event
+    # print(f'{event.keysym} и {event.char}') - for learn event
     if event.keysym == 'Escape':
         root.destroy()
     if event.keysym == 'space':
         retry()
-        pass
-
-
-def init_game():
-    global c
-
-    # set size objects
-    set_size_window(fullscreen=True)
-
-    # made window
-    root.title('Дино-игра')
-    c = Canvas(root, width=WINDOW_WIDTH, height=WINDOW_HEIGHT)
-    c.place(x=0, y=0)
-    c.focus_set()
-
-
-def game_over():
-    global playing
-
-    playing = False
-
-    # speed all objects = 0
-    dino.speed(0, 0)
-    for ball in Circle.balls:
-        ball.change_speed(0, 0)
-
-    # text
-    size_text = WINDOW_WIDTH // 25
-    font_text = 'Times ' + str(size_text)
-
-    c.create_text(WINDOW_WIDTH / 2, WINDOW_HEIGHT / 2, anchor=CENTER,
-                  font=font_text, text='Игра окончена!')
-
-    # button of retry
-    Button(root, bg='gray', text='Новая игра', font=font_text, command=retry) \
-        .place(x=WINDOW_WIDTH / 3, y=WINDOW_HEIGHT / 5, width=WINDOW_WIDTH / 3)
-
-
-def retry():
-    global app
-
-    # clear lists
-    Circle.balls_quantity = []
-    Circle.balls = []
-    Circle.id_ball = 0
-
-    # delete all objects
-    list_destroy = root.place_slaves()
-    for obj in list_destroy:
-        obj.destroy()
-
-    # start new game
-    init_game()
-    app = App()
+    # if event.char == 'w' or 'ц':
 
 
 if __name__ == '__main__':
