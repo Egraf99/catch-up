@@ -134,19 +134,46 @@ class Figure:
             if self.figure == 'square':
                 self.item = c.create_rectangle(self.x_left, self.y_up, self.x_right, self.y_down, fill=col)
 
+            elif self.figure == 'triangle':
+                middle_width = self.take_middle()
+                self.item = c.create_polygon(self.x_left, self.y_down, middle_width, self.y_up,
+                                             self.x_right, self.y_down, outline='black', fill=col)
+
     def move(self):
         if playing:
             self.speed_y += self.aff
 
             c.move(self.item, 0, self.speed_y)
 
-            if c.coords(self.item)[3] < WINDOW_HEIGHT:
-                root.after(ROOT, self.move)
-            else:
-                self.speed_y = 0
-                c.coords(self.item,
-                         self.x_left, WINDOW_HEIGHT - (fabs(self.y_down - self.y_up)),
-                         self.x_right, WINDOW_HEIGHT)
+            if self.figure == 'square':
+                if c.coords(self.item)[3] < WINDOW_HEIGHT:
+                    root.after(ROOT, self.move)
+                else:
+                    self.speed_y = 0
+                    c.coords(self.item,
+                             self.x_left, WINDOW_HEIGHT - (fabs(self.y_down - self.y_up)),
+                             self.x_right, WINDOW_HEIGHT)
+
+            elif self.figure == 'triangle':
+                if c.coords(self.item)[1] < WINDOW_HEIGHT:
+                    root.after(ROOT, self.move)
+                else:
+                    self.speed_y = 0
+                    c.coords(self.item,
+                             self.x_left, WINDOW_HEIGHT, self.take_middle(),
+                             WINDOW_HEIGHT - self.take_height(),
+                             self.x_right, WINDOW_HEIGHT)
+
+    def take_middle(self):
+        if self.x_right > self.x_left:
+            middle_x = (self.x_right - self.x_left) / 2 + self.x_left
+        else:
+            middle_x = (self.x_left - self.x_right) / 2 + self.x_right
+
+        return middle_x
+
+    def take_height(self):
+        return self.y_down - self.y_up
 
     def delete(self):
         c.delete(self.item)
@@ -155,7 +182,7 @@ class Figure:
 def start_make_figure(event):
     global fig, pressed
     pressed = True
-    fig = Figure()
+    fig = Figure(figure='triangle')
     fig.x_left, fig.y_up = event.x, event.y
 
 
