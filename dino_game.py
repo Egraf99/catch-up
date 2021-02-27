@@ -117,6 +117,8 @@ class App:
 class Figure:
     # list of figures
     figures = []
+    figures_quantity = []
+    id_figure = 0
 
     def __init__(self, figure='square'):
         self.item = None
@@ -125,6 +127,10 @@ class Figure:
 
         self.speed_y = 0
         self.aff = 1.5
+
+        self.id = self.id_figure
+        self.figures_quantity.append(self.id)
+        Figure.id_figure += 1
 
     def create(self, color=None):
         if playing:
@@ -155,7 +161,6 @@ class Figure:
                     c.coords(self.item,
                              self.x_left, WINDOW_HEIGHT - (fabs(self.y_down - self.y_up)),
                              self.x_right, WINDOW_HEIGHT)
-                    root.after(10000, self.delete)
 
             elif self.figure == 'triangle':
                 if c.coords(self.item)[1] < WINDOW_HEIGHT and c.coords(self.item)[3] < WINDOW_HEIGHT:
@@ -172,7 +177,6 @@ class Figure:
                                  self.x_left, WINDOW_HEIGHT - self.take_height(),
                                  self.take_middle(), WINDOW_HEIGHT,
                                  self.x_right, WINDOW_HEIGHT - self.take_height())
-                    root.after(10000, self.delete)
 
     def take_middle(self):
         if self.x_right > self.x_left:
@@ -186,7 +190,11 @@ class Figure:
         return fabs(self.y_down - self.y_up)
 
     def delete(self):
-        c.delete(self.item)
+        try:
+            c.delete(self.item)
+            self.figures_quantity.remove(self.id)
+        except ValueError:
+            pass
 
 
 def start_make_figure(event):
@@ -301,6 +309,9 @@ class Circle:
         try:
             ball_x1, ball_y1, ball_x2, ball_y2 = c.coords(self.item)
             for fig in Figure.figures:
+                print(Figure.figures)
+                print(fig)
+                print(fig.figure)
                 if fig.figure == 'square':
                     fig_x1, fig_y1, fig_x2, fig_y2 = c.coords(fig.item)
 
@@ -411,6 +422,7 @@ class Dino:
                 c.move(self.item, self.speed_x, self.speed_y)
 
                 root.after(ROOT, self.move)
+
             except Exception:
                 pass
 
@@ -449,7 +461,7 @@ def random_color():
 
 def handling_keyboard_events(event):
     global FIGURE
-    print(f'{event.keysym} и {event.char}') #- for learn event
+    #print(f'{event.keysym} и {event.char}') #- for learn event
     if event.keysym == 'Escape':
         root.destroy()
     if event.keysym == 'space':
