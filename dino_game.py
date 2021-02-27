@@ -20,7 +20,7 @@ def init_game():
 
 
 def set_size_window(*args, fullscreen=False):
-    global full, WINDOW_WIDTH, WINDOW_HEIGHT, DIN0_WIDTH, DIN0_HEIGHT, DIN0_SPEED_X, DIN0_SPEED_Y, BALL_SIZE
+    global full, WINDOW_WIDTH, WINDOW_HEIGHT, DIN0_WIDTH, DIN0_HEIGHT, DIN0_SPEED_X, DIN0_SPEED_Y, BALL_SIZE, FIGURE
 
     # set size window
     if len(args) == 2:
@@ -44,6 +44,8 @@ def set_size_window(*args, fullscreen=False):
     DIN0_SPEED_Y = WINDOW_HEIGHT / 20
 
     BALL_SIZE = WINDOW_WIDTH / 100
+
+    FIGURE = 'square'
 
 
 def game_over():
@@ -153,6 +155,7 @@ class Figure:
                     c.coords(self.item,
                              self.x_left, WINDOW_HEIGHT - (fabs(self.y_down - self.y_up)),
                              self.x_right, WINDOW_HEIGHT)
+                    root.after(10000, self.delete)
 
             elif self.figure == 'triangle':
                 if c.coords(self.item)[1] < WINDOW_HEIGHT and c.coords(self.item)[3] < WINDOW_HEIGHT:
@@ -169,6 +172,7 @@ class Figure:
                                  self.x_left, WINDOW_HEIGHT - self.take_height(),
                                  self.take_middle(), WINDOW_HEIGHT,
                                  self.x_right, WINDOW_HEIGHT - self.take_height())
+                    root.after(10000, self.delete)
 
     def take_middle(self):
         if self.x_right > self.x_left:
@@ -188,7 +192,7 @@ class Figure:
 def start_make_figure(event):
     global fig, pressed
     pressed = True
-    fig = Figure(figure='square')
+    fig = Figure(FIGURE)
     fig.x_left, fig.y_up = event.x, event.y
 
 
@@ -273,9 +277,8 @@ class Circle:
 
                 if self.movement:
                     root.after(ROOT, self.move)
-            except TclError:
-                pass
-            except IndexError:
+
+            except Exception:
                 pass
 
     def collision_dino(self):
@@ -289,9 +292,7 @@ class Circle:
                             (ball_y1 <= dino_y1 <= ball_y2 or ball_y1 <= dino_y2 <= ball_y2):
                         game_over()
 
-                except TclError:
-                    pass
-                except IndexError:
+                except Exception:
                     pass
 
             root.after(1, self.collision_dino)
@@ -316,9 +317,7 @@ class Circle:
                     fig_x1, fig._y1, fig_x2, fig_y2, fig_x3, fig_y3 = c.coords(fig.item)
                     pass
 
-        except TclError:
-            pass
-        except IndexError:
+        except Exception:
             pass
 
     def delete(self):
@@ -412,9 +411,7 @@ class Dino:
                 c.move(self.item, self.speed_x, self.speed_y)
 
                 root.after(ROOT, self.move)
-            except TclError:
-                pass
-            except IndexError:
+            except Exception:
                 pass
 
     def collision_balls(self):
@@ -429,9 +426,7 @@ class Dino:
                                 (ball_y1 <= dino_y1 <= ball_y2 or ball_y1 <= dino_y2 <= ball_y2):
                             game_over()
 
-                    except TclError:
-                        pass
-                    except IndexError:
+                    except Exception:
                         pass
 
             root.after(1, self.collision_balls)
@@ -453,12 +448,23 @@ def random_color():
 
 
 def handling_keyboard_events(event):
-    # print(f'{event.keysym} и {event.char}') - for learn event
+    global FIGURE
+    print(f'{event.keysym} и {event.char}') #- for learn event
     if event.keysym == 'Escape':
         root.destroy()
     if event.keysym == 'space':
         retry()
-    # if event.char == 'w' or 'ц':
+    if event.char == 'q' or event.char == 'й':
+        if FIGURE == 'square':
+            FIGURE = 'triangle'
+            txt = c.create_text(0, WINDOW_HEIGHT, anchor=SW, font=f'Times {WINDOW_WIDTH // 50}',
+                                text='Фигура: Треугольник')
+            root.after(1000, lambda: c.delete(txt))
+        elif FIGURE == 'triangle':
+            FIGURE = 'square'
+            txt = c.create_text(0, WINDOW_HEIGHT, anchor=SW, font=f'Times {WINDOW_WIDTH // 50}',
+                                text='Фигура: Прямоугольник')
+            root.after(1000, lambda: c.delete(txt))
 
 
 if __name__ == '__main__':
