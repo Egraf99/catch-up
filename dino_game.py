@@ -155,14 +155,20 @@ class Figure:
                              self.x_right, WINDOW_HEIGHT)
 
             elif self.figure == 'triangle':
-                if c.coords(self.item)[1] < WINDOW_HEIGHT:
+                if c.coords(self.item)[1] < WINDOW_HEIGHT and c.coords(self.item)[3] < WINDOW_HEIGHT:
                     root.after(ROOT, self.move)
                 else:
                     self.speed_y = 0
-                    c.coords(self.item,
-                             self.x_left, WINDOW_HEIGHT, self.take_middle(),
-                             WINDOW_HEIGHT - self.take_height(),
-                             self.x_right, WINDOW_HEIGHT)
+                    if self.y_down > self.y_up:
+                        c.coords(self.item,
+                                 self.x_left, WINDOW_HEIGHT, self.take_middle(),
+                                 WINDOW_HEIGHT - self.take_height(),
+                                 self.x_right, WINDOW_HEIGHT)
+                    else:
+                        c.coords(self.item,
+                                 self.x_left, WINDOW_HEIGHT - self.take_height(),
+                                 self.take_middle(), WINDOW_HEIGHT,
+                                 self.x_right, WINDOW_HEIGHT - self.take_height())
 
     def take_middle(self):
         if self.x_right > self.x_left:
@@ -173,7 +179,7 @@ class Figure:
         return middle_x
 
     def take_height(self):
-        return self.y_down - self.y_up
+        return fabs(self.y_down - self.y_up)
 
     def delete(self):
         c.delete(self.item)
@@ -182,7 +188,7 @@ class Figure:
 def start_make_figure(event):
     global fig, pressed
     pressed = True
-    fig = Figure(figure='triangle')
+    fig = Figure(figure='square')
     fig.x_left, fig.y_up = event.x, event.y
 
 
@@ -211,7 +217,7 @@ class Circle:
     id_ball = 0
     balls = []
     balls_quantity = []
-    max_ball = 5
+    max_ball = 30
 
     def __init__(self, x, y, size):
         self.x = x
@@ -232,22 +238,34 @@ class Circle:
         self.balls_quantity.append(self.id)
         Circle.id_ball += 1
 
+        self.collision_dino()
+
     def move(self):
         if playing:
             try:
+                # check ball collision figure
+                if self.collision_fig() == 'stop':
+                    self.speed_y = 0
+                    self.movement = False
+                    root.after(5000, self.delete)
+
+                elif self.collision_fig() == 'bounce':
+                    self.speed_y = -self.speed_y + self.speed_y / self.elasticity
+
                 # check coord ball
-                if c.coords(self.item)[3] > WINDOW_HEIGHT:
+                elif c.coords(self.item)[3] > WINDOW_HEIGHT:
                     c.coords(self.item, self.x - BALL_SIZE, WINDOW_HEIGHT - BALL_SIZE * 2, self.x + BALL_SIZE,
                              WINDOW_HEIGHT)
                     self.speed_y = -self.speed_y + self.speed_y / self.elasticity
 
                 # change speed ball and move ball
-                if c.coords(self.item)[3] > WINDOW_HEIGHT - 5 and fabs(self.speed_y) < 2:
+                elif c.coords(self.item)[3] > WINDOW_HEIGHT - 5 and fabs(self.speed_y) < 2:
                     c.coords(self.item, self.x - BALL_SIZE, WINDOW_HEIGHT - BALL_SIZE * 2, self.x + BALL_SIZE,
                              WINDOW_HEIGHT)
                     self.speed_y = 0
                     self.movement = False
                     root.after(5000, self.delete)
+
                 else:
                     self.speed_y += self.aff
 
@@ -259,6 +277,49 @@ class Circle:
                 pass
             except IndexError:
                 pass
+
+    def collision_dino(self):
+        if playing:
+            if self.movement:
+                try:
+                    dino_x1, dino_y1, dino_x2, dino_y2 = c.coords(dino.item)
+                    ball_x1, ball_y1, ball_x2, ball_y2 = c.coords(self.item)
+
+                    if (dino_x1 <= ball_x1 <= dino_x2 or dino_x1 <= ball_x2 <= dino_x2) and \
+                            (ball_y1 <= dino_y1 <= ball_y2 or ball_y1 <= dino_y2 <= ball_y2):
+                        game_over()
+
+                except TclError:
+                    pass
+                except IndexError:
+                    pass
+
+            root.after(1, self.collision_dino)
+
+    def collision_fig(self):
+        try:
+            ball_x1, ball_y1, ball_x2, ball_y2 = c.coords(self.item)
+            for fig in Figure.figures:
+                if fig.figure == 'square':
+                    fig_x1, fig_y1, fig_x2, fig_y2 = c.coords(fig.item)
+
+                    if (fig_x1 <= ball_x1 <= fig_x2 or fig_x1 <= ball_x2 <= fig_x2) and ball_y2 >= fig_y1:
+                        c.coords(self.item, ball_x1, fig_y1 - BALL_SIZE * 2, ball_x2, fig_y1)
+                        return 'bounce'
+
+                    elif (fig_x1 <= ball_x1 <= fig_x2 or fig_x1 <= ball_x2 <= fig_x2) and \
+                            ball_y2 > fig_y1 - 5 and fabs(self.speed_y) < 2:
+                        c.coords(self.item, ball_x1, fig_y1 - BALL_SIZE * 2, ball_x2, fig_y1)
+                        return 'stop'
+
+                elif fig.figure == 'triangle':
+                    fig_x1, fig._y1, fig_x2, fig_y2, fig_x3, fig_y3 = c.coords(fig.item)
+                    pass
+
+        except TclError:
+            pass
+        except IndexError:
+            pass
 
     def delete(self):
         try:
@@ -295,7 +356,7 @@ class Dino:
         self.movement = False
         self.jumping = False
         self.move()
-        self.collision()
+        self.collision_balls()
 
     def start_move(self, event):
         if playing:
@@ -356,16 +417,16 @@ class Dino:
             except IndexError:
                 pass
 
-    def collision(self):
+    def collision_balls(self):
         if playing:
             for ball in Circle.balls:
                 if ball.movement:
+                    dino_x1, dino_y1, dino_x2, dino_y2 = c.coords(self.item)
+                    ball_x1, ball_y1, ball_x2, ball_y2 = c.coords(ball.item)
+
                     try:
-                        if \
-                                (c.coords(self.item)[0] <= c.coords(ball.item)[0] <= c.coords(self.item)[2] or
-                                 c.coords(self.item)[0] <= c.coords(ball.item)[2] <= c.coords(self.item)[2]) and \
-                                        (c.coords(ball.item)[1] <= c.coords(self.item)[1] <= c.coords(ball.item)[3] or
-                                         c.coords(ball.item)[1] <= c.coords(self.item)[3] <= c.coords(ball.item)[3]):
+                        if (dino_x1 <= ball_x1 <= dino_x2 or dino_x1 <= ball_x2 <= dino_x2) and \
+                                (ball_y1 <= dino_y1 <= ball_y2 or ball_y1 <= dino_y2 <= ball_y2):
                             game_over()
 
                     except TclError:
@@ -373,7 +434,7 @@ class Dino:
                     except IndexError:
                         pass
 
-            root.after(1, self.collision)
+            root.after(1, self.collision_balls)
 
     def delete(self):
         try:
