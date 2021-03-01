@@ -107,8 +107,10 @@ class App:
         c.bind('<ButtonPress-3>', start_make_figure)
         c.bind('<B3-Motion>', show_figure)
         c.bind('<ButtonRelease-3>', make_figure)
+        c.bind('<Shift-ButtonPress-1>', del_figure)
         c.bind('<KeyPress>', dino.start_move)
         c.bind('<KeyRelease>', dino.stop_move)
+
         root.bind('<Key>', handling_keyboard_events)
 
         root.mainloop()
@@ -224,6 +226,15 @@ def show_figure(event):
         fig.create(color='white')
 
 
+def del_figure(event):
+    x, y = event.x, event.y
+    items = c.find_overlapping(x, y, x, y)
+    for item in filter(lambda i: i is not dino.item, items):
+        for fig in Figure.figures:
+            if fig.item is item:
+                fig.delete()
+
+
 class Circle:
     # list of create balls
     id_ball = 0
@@ -257,9 +268,7 @@ class Circle:
             try:
                 # check ball collision figure
                 if self.collision_fig() == 'stop':
-                    self.speed_y = 0
-                    self.movement = False
-                    root.after(5000, self.delete)
+                    self.speed_y = 0.1
 
                 elif self.collision_fig() == 'bounce':
                     self.speed_y = -self.speed_y + self.speed_y / self.elasticity
@@ -308,25 +317,28 @@ class Circle:
     def collision_fig(self):
         try:
             ball_x1, ball_y1, ball_x2, ball_y2 = c.coords(self.item)
+
             for fig in Figure.figures:
-                print(Figure.figures)
-                print(fig)
-                print(fig.figure)
-                if fig.figure == 'square':
-                    fig_x1, fig_y1, fig_x2, fig_y2 = c.coords(fig.item)
+                try:
 
-                    if (fig_x1 <= ball_x1 <= fig_x2 or fig_x1 <= ball_x2 <= fig_x2) and ball_y2 >= fig_y1:
-                        c.coords(self.item, ball_x1, fig_y1 - BALL_SIZE * 2, ball_x2, fig_y1)
-                        return 'bounce'
+                    if fig.figure == 'square':
+                        fig_x1, fig_y1, fig_x2, fig_y2 = c.coords(fig.item)
 
-                    elif (fig_x1 <= ball_x1 <= fig_x2 or fig_x1 <= ball_x2 <= fig_x2) and \
-                            ball_y2 > fig_y1 - 5 and fabs(self.speed_y) < 2:
-                        c.coords(self.item, ball_x1, fig_y1 - BALL_SIZE * 2, ball_x2, fig_y1)
-                        return 'stop'
+                        if (fig_x1 <= ball_x1 <= fig_x2 or fig_x1 <= ball_x2 <= fig_x2) and ball_y2 >= fig_y1:
+                            c.coords(self.item, ball_x1, fig_y1 - BALL_SIZE * 2, ball_x2, fig_y1)
+                            return 'bounce'
 
-                elif fig.figure == 'triangle':
-                    fig_x1, fig._y1, fig_x2, fig_y2, fig_x3, fig_y3 = c.coords(fig.item)
-                    pass
+                        elif (fig_x1 <= ball_x1 <= fig_x2 or fig_x1 <= ball_x2 <= fig_x2) and \
+                                ball_y2 > fig_y1 - 5 and fabs(self.speed_y) < 2:
+                            c.coords(self.item, ball_x1, fig_y1 - BALL_SIZE * 2, ball_x2, fig_y1)
+                            return 'stop'
+
+                    elif fig.figure == 'triangle':
+                        fig_x1, fig._y1, fig_x2, fig_y2, fig_x3, fig_y3 = c.coords(fig.item)
+                        pass
+
+                except Exception:
+                    continue
 
         except Exception:
             pass
