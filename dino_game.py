@@ -270,7 +270,7 @@ class Circle:
                 if self.collision_fig() == 'stop':
                     self.speed_y = 0.1
 
-                elif self.collision_fig() == 'bounce':
+                elif self.collision_fig() == 'bounce_up':
                     self.speed_y = -self.speed_y + self.speed_y / self.elasticity
 
                 # check coord ball
@@ -326,7 +326,7 @@ class Circle:
 
                         if (fig_x1 <= ball_x1 <= fig_x2 or fig_x1 <= ball_x2 <= fig_x2) and ball_y2 >= fig_y1:
                             c.coords(self.item, ball_x1, fig_y1 - BALL_SIZE * 2, ball_x2, fig_y1)
-                            return 'bounce'
+                            return 'bounce_up'
 
                         elif (fig_x1 <= ball_x1 <= fig_x2 or fig_x1 <= ball_x2 <= fig_x2) and \
                                 ball_y2 > fig_y1 - 5 and fabs(self.speed_y) < 2:
@@ -334,8 +334,18 @@ class Circle:
                             return 'stop'
 
                     elif fig.figure == 'triangle':
-                        fig_x1, fig._y1, fig_x2, fig_y2, fig_x3, fig_y3 = c.coords(fig.item)
-                        pass
+                        fig_x1, fig_y1, fig_x2, fig_y2, fig_x3, fig_y3 = c.coords(fig.item)
+
+                        if fig_y2 > fig_y1:  # inverted triangle
+
+                            if (fig_x1 <= ball_x1 <= fig_x3 or fig_x1 <= ball_x2 <= fig_x3) and ball_y2 >= fig_y1:
+                                c.coords(self.item, ball_x1, fig_y1 - BALL_SIZE * 2, ball_x2, fig_y1)
+                                return 'bounce_up'
+
+                            elif (fig_x1 <= ball_x1 <= fig_x3 or fig_x1 <= ball_x2 <= fig_x3) and \
+                                    ball_y2 >= fig_y1 - 5 and fabs(self.speed_y) < 2:
+                                c.coords(self.item, ball_x1, fig_y1 - BALL_SIZE * 2, ball_x2, fig_y1)
+                                return 'stop'
 
                 except Exception:
                     continue
@@ -473,7 +483,7 @@ def random_color():
 
 def handling_keyboard_events(event):
     global FIGURE
-    #print(f'{event.keysym} и {event.char}') #- for learn event
+    # print(f'{event.keysym} и {event.char}') #- for learn event
     if event.keysym == 'Escape':
         root.destroy()
     if event.keysym == 'space':
